@@ -14,7 +14,7 @@ export default function Welcome() {
     <View style={styles.container}>
       {/* Arka plan resmi */}
       <Image
-        source={require('../../assets/images/brooke-balentine-lZsmCrIGbho-unsplash.jpg')}
+        source={require('../../assets/images/modelResmi.jpg')}
         style={styles.backgroundImage}
         resizeMode="cover"
       />
