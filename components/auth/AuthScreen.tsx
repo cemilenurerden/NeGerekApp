@@ -2,11 +2,16 @@ import { BlurView } from 'expo-blur';
 import { useRootNavigationState } from 'expo-router';
 import React from 'react';
 import {
-    ActivityIndicator,
-    Dimensions, Image, KeyboardAvoidingView, Platform,
-    ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator,
+  Dimensions, Image, KeyboardAvoidingView, Platform,
+  ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { Mode, useAuthForm } from '../../hooks/useAuthForm';
+
+// Constants
+const DEFAULT_BACKGROUND_IMAGE = require('../../assets/images/buğday.jpg');
+const HEADER_MARGIN_BOTTOM = 400;
+const BLUR_INTENSITY = 15;
 
 interface AuthScreenProps {
   mode: Mode;
@@ -17,6 +22,17 @@ interface AuthScreenProps {
   showSocialLogin?: boolean;
   showForgotPassword?: boolean;
 }
+
+// Default content based on mode
+const getDefaultContent = (mode: Mode) => {
+  const isLogin = mode === 'login';
+  return {
+    title: isLogin ? 'Kullanıcı Girişi' : 'Kayıt Ol',
+    subtitle: isLogin ? 'Devam etmek için giriş yapın.' : 'E-posta ve şifre ile kayıt olun.',
+    primaryLabel: isLogin ? 'Log In' : 'Sign Up',
+    showForgotPassword: isLogin,
+  };
+};
 
 export default function AuthScreen({ 
   mode, 
@@ -32,30 +48,33 @@ export default function AuthScreen({
   
   const authForm = useAuthForm(mode);
   const isLogin = mode === 'login';
+  const defaults = getDefaultContent(mode);
 
-  // Default values
-  const finalTitle = title || (isLogin ? 'Kullanıcı Girişi' : 'Kayıt Ol');
-  const finalSubtitle = subtitle || (isLogin ? 'Devam etmek için giriş yapın.' : 'E-posta ve şifre ile kayıt olun.');
-  const finalPrimaryLabel = primaryLabel || (isLogin ? 'Log In' : 'Sign Up');
-  const finalBackgroundImage = backgroundImage || require('../../assets/images/buğday.jpg');
-  const finalShowForgotPassword = showForgotPassword !== undefined ? showForgotPassword : isLogin;
+  // Use provided values or defaults
+  const content = {
+    title: title || defaults.title,
+    subtitle: subtitle || defaults.subtitle,
+    primaryLabel: primaryLabel || defaults.primaryLabel,
+    backgroundImage: backgroundImage || DEFAULT_BACKGROUND_IMAGE,
+    showForgotPassword: showForgotPassword !== undefined ? showForgotPassword : defaults.showForgotPassword,
+  };
 
   if (!isReady) return <View style={{ flex: 1 }} />;
 
   return (
     <View style={{ flex: 1 }}>
       <Image
-        source={finalBackgroundImage}
+        source={content.backgroundImage}
         style={styles.backgroundImage}
         resizeMode="cover"
       />
-      <BlurView intensity={15} style={styles.blurOverlay} pointerEvents="none" />
+      <BlurView intensity={BLUR_INTENSITY} style={styles.blurOverlay} pointerEvents="none" />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={[styles.textContainer, styles.header]}>
-            <Text style={styles.text}>{finalTitle}</Text>
-            <Text style={[styles.text, styles.text1]}>{finalSubtitle}</Text>
+            <Text style={styles.text}>{content.title}</Text>
+            <Text style={[styles.text, styles.text1]}>{content.subtitle}</Text>
           </View>
 
           <View style={styles.card}>
@@ -91,8 +110,8 @@ export default function AuthScreen({
             />
             {authForm.errors.password && <Text style={styles.fieldError}>{authForm.errors.password}</Text>}
 
-            {finalShowForgotPassword && (
-              <TouchableOpacity style={styles.forgotWrap} >
+            {content.showForgotPassword && (
+              <TouchableOpacity style={styles.forgotWrap} disabled>
                 <Text style={styles.linkMuted}>Forgot Password?</Text>
               </TouchableOpacity>
             )}
@@ -105,7 +124,7 @@ export default function AuthScreen({
               {authForm.isLoading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.primaryBtnText}>{finalPrimaryLabel}</Text>
+                <Text style={styles.primaryBtnText}>{content.primaryLabel}</Text>
               )}
             </TouchableOpacity>
 
@@ -117,11 +136,11 @@ export default function AuthScreen({
                   <View style={styles.line} />
                 </View>
 
-                <TouchableOpacity style={styles.socialBtn} onPress={() => {}}>
+                <TouchableOpacity style={styles.socialBtn} disabled>
                   <Text style={styles.socialBtnText}>Continue with Google</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.socialBtn} onPress={() => {}}>
+                <TouchableOpacity style={styles.socialBtn} disabled>
                   <Text style={styles.socialBtnText}>Continue with Apple</Text>
                 </TouchableOpacity>
               </>
@@ -147,7 +166,7 @@ const styles = StyleSheet.create({
   blurOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   backgroundImage: { position: 'absolute', top: 0, left: 0, width, height, zIndex: 0 },
   content: { minHeight: height, paddingHorizontal: 24, paddingVertical: 32, justifyContent: 'center', zIndex: 1 },
-  textContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1, marginBottom: 400 },
+  textContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1, marginBottom: HEADER_MARGIN_BOTTOM },
   header: { flex: 0, marginBottom: 16 },
   text: { fontSize: 30, color: 'white', textAlign: 'center' },
   text1: { fontSize: 20, marginTop: 10 },

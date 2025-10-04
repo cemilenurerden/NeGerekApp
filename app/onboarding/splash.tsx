@@ -11,7 +11,8 @@ export default function Splash() {
   const goNext = async () => {
     try {
       const seen = (await AsyncStorage.getItem("onboardingSeen")) === "1";
-      router.replace(seen ? "/(tabs)" : "/onboarding/welcome");
+      // Her zaman onboarding'e git, anasayfaya otomatik yönlendirme yapma
+      router.replace("/onboarding/welcome");
     } catch {
       router.replace("/onboarding/welcome");
     }

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { ERROR_MESSAGES } from '../constants/error';
 
 export type Mode = 'login' | 'register';
 
@@ -28,86 +29,70 @@ export function useAuthForm(mode: Mode): AuthFormState & AuthFormActions {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<AuthFormState['errors']>({});
-
   const isLogin = mode === 'login';
 
-  const clearErrors = () => {
-    setErrors({});
-  };
+  const clearErrors = () => setErrors({});
 
   const validateForm = (): boolean => {
     const newErrors: AuthFormState['errors'] = {};
-    
-    // Email validation
-    if (!email.trim()) {
-      newErrors.email = 'E-posta adresi gerekli';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Geçerli bir e-posta adresi girin';
-    }
-    
-    // Password validation
-    if (!password.trim()) {
-      newErrors.password = 'Şifre gerekli';
-    } else if (password.length < 6) {
-      newErrors.password = 'Şifre en az 6 karakter olmalı';
-    }
-    
+
+    if (!email.trim()) newErrors.email = ERROR_MESSAGES.AUTH.REQUIRED_EMAIL;
+    else if (!/\S+@\S+\.\S+/.test(email))
+      newErrors.email = ERROR_MESSAGES.AUTH.INVALID_EMAIL;
+
+    if (!password.trim()) newErrors.password = ERROR_MESSAGES.AUTH.REQUIRED_PASSWORD;
+    else if (password.length < 6)
+      newErrors.password = ERROR_MESSAGES.AUTH.SHORT_PASSWORD;
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const submitForm = async (): Promise<void> => {
-    // Clear previous errors
     clearErrors();
-    
-    // Validate form
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
-    
+
     try {
-      // TODO: API çağrısı
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // başarılıysa -> router.replace('/(tabs)');
-      console.log(`${isLogin ? 'Login' : 'Register'} successful`);
-      
-    } catch (error) {
-      setErrors({ general: 'Bir hata oluştu. Lütfen tekrar deneyin.' });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const demoEmail = 'demo@example.com';
+      const demoPassword = '123456';
+
+      if (email === demoEmail && password === demoPassword) {
+        console.log(`${isLogin ? 'Login' : 'Register'} successful`);
+        router.replace('/(tabs)');
+      } else {
+        setErrors({
+          general: isLogin
+            ? ERROR_MESSAGES.AUTH.WRONG_CREDENTIALS
+            : ERROR_MESSAGES.AUTH.DUPLICATE_EMAIL,
+        });
+      }
+    } catch {
+      setErrors({ general: ERROR_MESSAGES.GENERAL.UNKNOWN });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const navigateToOtherMode = () => {
+  const navigateToOtherMode = () =>
     router.push(isLogin ? '/onboarding/register' : '/onboarding/login');
+
+  const handleSetEmail = (val: string) => {
+    setEmail(val);
+    if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
   };
 
-  const handleSetEmail = (newEmail: string) => {
-    setEmail(newEmail);
-    if (errors.email) {
-      setErrors(prev => ({ ...prev, email: undefined }));
-    }
-  };
-
-  const handleSetPassword = (newPassword: string) => {
-    setPassword(newPassword);
-    if (errors.password) {
-      setErrors(prev => ({ ...prev, password: undefined }));
-    }
+  const handleSetPassword = (val: string) => {
+    setPassword(val);
+    if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
   };
 
   return {
-    // State
     email,
     password,
     isLoading,
     errors,
-    
-    // Actions
     setEmail: handleSetEmail,
     setPassword: handleSetPassword,
     clearErrors,
